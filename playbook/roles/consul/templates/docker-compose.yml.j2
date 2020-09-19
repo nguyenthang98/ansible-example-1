@@ -1,0 +1,18 @@
+version: "2.1"
+
+services:
+  consul:
+    image: {{ consul.image }} 
+    network_mode: host
+    volumes:
+      - {{ consul.dir }}/data:/consul/data
+      - {{ consul.dir }}/consul.d:/consul/consul.d
+    command:
+      {%- set server_index = 0 -%}
+      {%- if hostvars[inventory_hostname]['is_consul_server'] is defined and  hostvars[inventory_hostname]['is_consul_server']|bool  -%}
+      {%- set server_index = server_index + 1 -%}
+      server -ui -node consul_server_{{ server_index }} -bootstrap
+      {%- else -%}
+      agent -join consul_server_1
+      {%- endif %}
+      -bind 0.0.0.0 -advertise {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }} -data_dir /consul/data -config_dir /consul/consul.d 

@@ -1,2 +1,4 @@
 ---
 - import_playbook: gather_facts.yml
+- import_playbook: bootstrap.yml
+  when: play_action == 'bootstrap'

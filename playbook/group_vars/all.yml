@@ -1,0 +1,7 @@
+---
+play_action: 'bootstrap'
+
+# HashiCorp Consul
+consul:
+  dir: /opt/consul
+  image: consul:1.8

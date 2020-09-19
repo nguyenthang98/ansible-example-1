@@ -1,0 +1,6 @@
+---
+- name: Bootstrap consul service
+  hosts: consul
+  gather_facts: false
+  roles:
+    - consul

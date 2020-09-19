@@ -1,0 +1,21 @@
+---
+- name: Create consul required dir
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: vagrant
+    group: sudo
+  with_items:
+    - "{{ consul.dir }}/data"
+    - "{{ consul.dir }}/consul.d"
+
+- name: Create consul compose file
+  become: true
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ consul.dir }}/docker-compose.yml"
+    owner: vagrant
+    group: sudo
+    mode: "0755"

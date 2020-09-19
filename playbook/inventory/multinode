@@ -1,4 +1,8 @@
-[all]
+[nodes]
 node-1 ansible_host=192.168.100.11 ansible_user=vagrant ansible_password=vagrant
 node-2 ansible_host=192.168.100.12 ansible_user=vagrant ansible_password=vagrant
 node-3 ansible_host=192.168.100.13 ansible_user=vagrant ansible_password=vagrant
+
+[consul]
+node-1 is_consul_server=True
+node-2
