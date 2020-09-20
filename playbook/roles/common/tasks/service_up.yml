@@ -1,0 +1,21 @@
+---
+- name: Bring service up
+  shell: docker-compose -f {{ service_compose_file }} up -d
+
+- name: Ensure all ports of service are listerning
+  wait_for:
+    port: "{{ item }}"
+    state: started
+    timeout: 10
+  with_items: "{{ service_ports }}"
+  when: service_ports is defined
+
+- name: Ensure all service is up
+  block:
+    - name: List services
+      shell: docker-compose -f {{ service_compose_file }} ps --services | wc -l
+      register: services_length
+    - name: List Up state services and ensure these services length are equal to orginal
+      shell: docker-compose -f {{ service_compose_file }} ps | grep Up | wc -l
+      register: services_up
+      failed_when: services_up.stdout|int != services_length.stdout|int

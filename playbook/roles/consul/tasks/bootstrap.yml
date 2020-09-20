@@ -19,3 +19,13 @@
     owner: vagrant
     group: sudo
     mode: "0755"
+
+- name: Deploy Consul
+  import_role:
+    name: common
+    tasks_from: service_up
+  vars:
+    service_compose_file: "{{ consul.dir }}/docker-compose.yml"
+    service_ports:
+      - 8500
+      - 8600

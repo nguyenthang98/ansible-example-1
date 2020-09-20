@@ -9,6 +9,7 @@ Vagrant.configure("2") do |config|
         vb.memory = "1024"
         vb.cpus = "2"
       end
+			node.vm.provision "shell", path: "scripts/docker-compose.sh", run: "always"
     end
   end
   config.vm.define "ansible-client" do |node|

@@ -4,15 +4,16 @@ services:
   consul:
     image: {{ consul.image }} 
     network_mode: host
+    restart: always
     volumes:
       - {{ consul.dir }}/data:/consul/data
       - {{ consul.dir }}/consul.d:/consul/consul.d
-    command:
-      {%- set server_index = 0 -%}
-      {%- if hostvars[inventory_hostname]['is_consul_server'] is defined and  hostvars[inventory_hostname]['is_consul_server']|bool  -%}
-      {%- set server_index = server_index + 1 -%}
-      server -ui -node consul_server_{{ server_index }} -bootstrap
+    command: > 
+      agent 
+      {% set server_index = 0 -%}
+      {%- if hostvars[inventory_hostname]['is_consul_server'] is defined and hostvars[inventory_hostname]['is_consul_server']|bool  -%}
+      -server -ui -bootstrap -client 0.0.0.0
       {%- else -%}
-      agent -join consul_server_1
+      -join {{ hostvars | dict2items | map(attribute='value') | selectattr('is_consul_server', 'defined') | map(attribute='ansible_host') | list | first }}
       {%- endif %}
-      -bind 0.0.0.0 -advertise {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }} -data_dir /consul/data -config_dir /consul/consul.d 
+      -bind {{ hostvars[inventory_hostname]['ansible_host'] }}  -advertise {{ hostvars[inventory_hostname]['ansible_host'] }} -data-dir /consul/data -config-dir /consul/consul.d
