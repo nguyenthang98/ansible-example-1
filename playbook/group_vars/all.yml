@@ -12,11 +12,12 @@ consul:
   data_dir: /opt/consul/data
   config_dir: /opt/consul/consul.d
   image: consul:1.8
+  service_discovery_domain: service.consul
 
-# Datastore service group
 datastore:
   # Mongodb
   mongodb:
+    discovery_name: mongodb
     compose_dir: /opt/datastore/services
     data_dir: /opt/datastore/data/mongodb
     config_dir: /opt/datastore/etc/mongodb

@@ -1,4 +1,4 @@
----
+GG-
 - name: Prepare to bootstrap Mongodb
   import_role:
     name: common
@@ -33,16 +33,18 @@
     - hostvars[inventory_hostname]['is_mongodb_master'] is defined
     - hostvars[inventory_hostname]['is_mongodb_master'] | bool
 
-- name: Register service with consul
+- name: Register service with consul (cluster)
   import_role:
     name: common
     tasks_from: service_register
     handlers_from: main
   vars:
-    service_name: MongoDB Cluster
+    service_name: mongodb_cluster
     service_port: "{{ datastore.mongodb.port }}"
+    service_address: "{{ ansible_host }}"
     service_id: mongodb_cluster
     service_checks:
       - id: mongodb_port_open
         name: Check Mongodb Port
-        tcp_check: "localhost:{{ datastore.mongodb.port }}"
+        tcp_check: "{{ ansible_host }}:{{ datastore.mongodb.port }}"
+  when: groups['mongodb'] | length >= 3

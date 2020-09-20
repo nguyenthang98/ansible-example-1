@@ -1,5 +1,6 @@
 ---
 - name: reload consul config
+  run_once: true
   delegate_to: "{{ item }}"
   shell: docker-compose -f {{ consul.compose_dir }}/docker-compose.yml exec consul consul reload
   with_items: "{{ groups['consul'] }}"

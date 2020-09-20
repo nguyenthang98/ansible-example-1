@@ -1,7 +1,9 @@
 {
     "service": {
+        "id": "{{ service_id }}",
         "name": "{{ service_name }}",
         "port": {{ service_port }},
+        "address": "{{ service_address }}",
         "tags": [
 					{{ service_tags | default([]) | join(",")}}
         ],
