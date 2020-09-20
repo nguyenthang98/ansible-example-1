@@ -1,0 +1,48 @@
+---
+- name: Prepare to bootstrap Mongodb
+  import_role:
+    name: common
+    tasks_from: service_prepare
+  vars:
+    service_config: "{{ datastore.mongodb }}"
+
+- name: Create mongodb files from template
+  become: true
+  template:
+    src: "{{ item.src }}" 
+    dest: "{{ item.dest }}"
+    owner: vagrant
+    group: sudo
+    mode: "0755"
+  with_items:
+    - {src: "docker-compose.yml.j2", dest: "{{ datastore.mongodb.compose_dir }}/mongo.compose.yml"}
+    - {src: "init_repl.js.j2", dest: "{{ datastore.mongodb.config_dir }}/init_repl.js"}
+
+- name: Deploy mongodb
+  import_role:
+    name: common
+    tasks_from: service_up
+  vars:
+    service_compose_file: "{{ datastore.mongodb.compose_dir }}/mongo.compose.yml"
+    service_ports:
+      - "{{ datastore.mongodb.port }}"
+
+- include_tasks: init_replica_set.yml
+  when:
+    - groups['mongodb'] | length >= 3
+    - hostvars[inventory_hostname]['is_mongodb_master'] is defined
+    - hostvars[inventory_hostname]['is_mongodb_master'] | bool
+
+- name: Register service with consul
+  import_role:
+    name: common
+    tasks_from: service_register
+    handlers_from: main
+  vars:
+    service_name: MongoDB Cluster
+    service_port: "{{ datastore.mongodb.port }}"
+    service_id: mongodb_cluster
+    service_checks:
+      - id: mongodb_port_open
+        name: Check Mongodb Port
+        tcp_check: "localhost:{{ datastore.mongodb.port }}"

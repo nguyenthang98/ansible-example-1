@@ -1,0 +1,15 @@
+version: "{{ docker.compose_version }}"
+
+services:
+  mongodb:
+    image: {{ datastore.mongodb.image }} 
+    network_mode: host
+    restart: always
+    volumes:
+      - {{ datastore.mongodb.data_dir }}:/data/db
+      - {{ datastore.mongodb.config_dir }}:/etc/mongodb
+    entrypoint: >
+      mongod --bind_ip_all --port {{ datastore.mongodb.port }}
+      {% if groups['mongodb'] | length >= 3  -%}
+      --replSet {{ replica_set_name }}
+      {%- endif -%}

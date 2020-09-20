@@ -1,0 +1,6 @@
+---
+- name: Apply mongodb role
+  hosts: mongodb
+  gather_facts: false
+  roles:
+    - mongodb

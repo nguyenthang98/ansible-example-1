@@ -4,3 +4,5 @@
   gather_facts: false
   roles:
     - consul
+
+- import_playbook: datastore.yml

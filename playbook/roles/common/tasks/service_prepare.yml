@@ -1,0 +1,16 @@
+---
+- name: Check required folders are exists
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: vagrant
+    group: sudo
+  with_items: "{{ service_config | dict2items | selectattr('key', 'search', '_dir$') | map(attribute='value') | list }}"
+
+- name: Group hosts by attribute (If configured)
+  group_by:
+    key: "{{ item }}_{{ hostvars[inventory_hostname][item]|default('null') }}"
+  with_items: "{{ groups_by_attr }}"
+  when: groups_by_attr is defined

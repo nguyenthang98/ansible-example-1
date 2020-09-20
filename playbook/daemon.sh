@@ -13,7 +13,7 @@ function daemon() {
                 else
                   echo "Detect file changed at: $(date)" >> /tmp/ansible-project.log
                 fi
-                ./run.sh -vv >> /tmp/ansible-project.log
+                ./run.sh >> /tmp/ansible-project.log
                 chsum1=$chsum2
                 ((count++))
             fi

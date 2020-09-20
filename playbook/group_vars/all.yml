@@ -1,7 +1,24 @@
 ---
+# default play action
 play_action: 'bootstrap'
+
+# Docker and Docker-composed
+docker:
+  compose_version: "2.1"
 
 # HashiCorp Consul
 consul:
-  dir: /opt/consul
+  compose_dir: /opt/consul
+  data_dir: /opt/consul/data
+  config_dir: /opt/consul/consul.d
   image: consul:1.8
+
+# Datastore service group
+datastore:
+  # Mongodb
+  mongodb:
+    compose_dir: /opt/datastore/services
+    data_dir: /opt/datastore/data/mongodb
+    config_dir: /opt/datastore/etc/mongodb
+    image: mongo:bionic
+    port: 27017
