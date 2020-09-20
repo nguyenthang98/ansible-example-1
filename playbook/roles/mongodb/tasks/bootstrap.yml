@@ -1,4 +1,4 @@
-GG-
+---
 - name: Prepare to bootstrap Mongodb
   import_role:
     name: common
