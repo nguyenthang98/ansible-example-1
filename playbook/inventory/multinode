@@ -12,3 +12,20 @@ node-3 is_consul_server=True
 node-1
 node-2 is_mongodb_master=True
 node-3
+
+[redis_queue]
+node-1
+node-2
+
+[redis_store]
+node-2
+node-3
+
+[redis_sentinel]
+node-1
+node-2
+node-3
+
+[redis:children]
+redis_store
+redis_queue

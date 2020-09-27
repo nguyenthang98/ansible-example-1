@@ -1,0 +1,11 @@
+bind 0.0.0.0
+port {{ datastore[item].port }} 
+dir /etc/redis/redis.d
+{% if 'sentinel' in item  -%}
+{% for master in datastore[item].masters %}
+sentinel monitor {{ master.service_name }}_master {{ groups[master.service_name] | map('extract', hostvars, 'ansible_host') | list | first }} {{ datastore[master.service_name].port }} 2
+sentinel down-after-milliseconds {{ master.service_name }}_master 60000
+sentinel failover-timeout {{ master.service_name }}_master 180000
+sentinel parallel-syncs {{ master.service_name }}_master 1
+{% endfor %}
+{%- endif %}

@@ -23,3 +23,26 @@ datastore:
     config_dir: /opt/datastore/etc/mongodb
     image: mongo:bionic
     port: 27017
+  redis_sentinel:
+    discovery_name: redis_sentinel
+    compose_dir: /opt/datastore/services
+    config_dir: /opt/datastore/etc/redis_sentinel
+    image: redis:5.0
+    port: 26379
+    masters:
+      - service_name: redis_queue
+      - service_name: redis_store
+  redis_queue:
+    discovery_name: redis_queue
+    compose_dir: /opt/datastore/services
+    data_dir: /opt/datastore/data/redis_queue
+    config_dir: /opt/datastore/etc/redis_queue
+    image: redis:5.0
+    port: 6379
+  redis_store:
+    discovery_name: redis_store
+    compose_dir: /opt/datastore/services
+    data_dir: /opt/datastore/data/redis_store
+    config_dir: /opt/datastore/etc/redis_store
+    image: redis:5.0
+    port: 6380

@@ -1,0 +1,17 @@
+version: "{{ docker.compose_version }}"
+
+services:
+  {{ item }}:
+    image: {{ datastore[item].image }} 
+    network_mode: host
+    restart: always
+    user: '1000'
+    volumes:
+      - {{ datastore[item].config_dir }}:/etc/redis/redis.d/
+    command: >
+        redis-server /etc/redis/redis.d/{{ item }}.conf
+        {% if 'sentinel' in item  -%}
+        --sentinel
+        {%- elif groups[item]|length > 1 and groups[item].index(inventory_hostname) > 0 -%}
+        --slaveof {{ groups[item] | map('extract', hostvars, 'ansible_host') | list | first }} {{ datastore[item].port }}
+        {%- endif -%}

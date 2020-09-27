@@ -1,0 +1,63 @@
+---
+- name: Prepare to bootstrap redis
+  include_role:
+    name: common
+    tasks_from: service_prepare
+  vars:
+    service_config: "{{ datastore[item] }}"
+  when: inventory_hostname in groups[item]
+  with_items: "{{ datastore | dict2items | selectattr('key', 'match', '^redis_') | map(attribute='key') | list }}"
+
+- name: Create compose files
+  become: true
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ datastore[item].compose_dir }}/{{ item }}.compose.yml"
+    owner: vagrant
+    group: sudo
+    mode: "0755"
+  when: inventory_hostname in groups[item]
+  with_items: "{{ datastore | dict2items | selectattr('key', 'match', '^redis_') | map(attribute='key') | list }}"
+
+- name: Create config files
+  become: true
+  template:
+    src: redis.conf.j2
+    dest: "{{ datastore[item].config_dir }}/{{ item }}.conf"
+    owner: vagrant
+    group: sudo
+    mode: "0755"
+  when: inventory_hostname in groups[item]
+  with_items: "{{ datastore | dict2items | selectattr('key', 'match', '^redis_') | map(attribute='key') | list }}"
+  
+- name: Bring services up
+  include_role:
+    name: common
+    tasks_from: service_up
+  vars:
+    service_compose_file: "{{ datastore[redis_loop_item].compose_dir }}/{{ redis_loop_item }}.compose.yml"
+    service_ports:
+      - "{{ datastore[redis_loop_item].port }}"
+  when: inventory_hostname in groups[redis_loop_item]
+  loop_control:
+    loop_var: redis_loop_item
+  loop: "{{ datastore | dict2items | selectattr('key', 'match', '^redis_') | map(attribute='key') | list }}"
+
+- name: Register service with consul (cluster)
+  include_role:
+    name: common
+    tasks_from: service_register
+    handlers_from: main
+  vars:
+    service_name: "{{ datastore[redis_loop_item].discovery_name }}"
+    service_port: "{{ datastore[redis_loop_item].port }}"
+    service_address: "{{ ansible_host }}"
+    service_id: "{{ datastore[redis_loop_item].discovery_name }}"
+    service_checks:
+      - id: "{{ datastore[redis_loop_item].discovery_name }}_port_open"
+        name: "Check {{ datastore[redis_loop_item].discovery_name }} Port"
+        tcp_check: "{{ ansible_host }}:{{ datastore[redis_loop_item].port }}"
+  when: inventory_hostname in groups[redis_loop_item]
+  loop_control:
+    loop_var: redis_loop_item
+  loop: "{{ datastore | dict2items | selectattr('key', 'match', '^redis_') | map(attribute='key') | list }}"

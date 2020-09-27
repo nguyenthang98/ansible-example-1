@@ -4,3 +4,11 @@
   gather_facts: false
   roles:
     - mongodb
+
+- name: Apply redis role
+  hosts: redis
+  gather_facts: flase
+  roles:
+    - redis
+  tags:
+    - redis
