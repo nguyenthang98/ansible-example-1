@@ -1,0 +1,8 @@
+#!/bin/sh
+IS_MASTER=$(docker run --rm -t mvertes/alpine-mongo:4.0.6-1 mongo $1:27017 --quiet --eval 'rs.isMaster().ismaster' | sed 's/\r//')
+echo "is master $IS_MASTER"
+if [ "$IS_MASTER" = "true" ]; then
+        exit 0
+else
+        exit 1
+fi

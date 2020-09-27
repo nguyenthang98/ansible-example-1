@@ -1,0 +1,14 @@
+---
+- name: Bring service down
+  when: compose_file is defined
+  failed_when: false
+  shell: >
+    docker-compose -f {{ compose_file }} down
+
+- name: remove related files and folders
+  when: remove_files_and_folders is defined
+  with_items: "{{ remove_files_and_folders }}"
+  become: true
+  file:
+    path: "{{ item }}"
+    state: absent  

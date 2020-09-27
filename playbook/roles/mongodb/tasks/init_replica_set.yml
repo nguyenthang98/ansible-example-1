@@ -2,4 +2,4 @@
 - name: Create replica set
   run_once: yes
   shell: >
-    docker-compose -f {{ datastore.mongodb.compose_dir }}/mongo.compose.yml exec -T mongodb sh -c "mongo < /etc/mongodb/init_repl.js"
+    docker-compose -f {{ datastore.mongodb.compose_dir }}/{{ datastore.mongodb.compose_file }} exec -T mongodb sh -c "mongo < /etc/mongodb/init_repl.js"

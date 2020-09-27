@@ -1,0 +1,6 @@
+---
+- name: Apply role api
+  hosts: api
+  gather_facts: false
+  roles:
+    - api

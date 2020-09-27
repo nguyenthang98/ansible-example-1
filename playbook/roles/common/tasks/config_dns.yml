@@ -1,18 +1,16 @@
 ---
-- name: Ensure local consul DNS exist on top of resolv.conf file
+- name: Create DNS resolv.conf from template
+  when: dns_servers is defined
   become: true
-  lineinfile:
+  blockinfile:
     path: /etc/resolv.conf
-    regex: "^nameserver 127.0.0.1"
-    line: "nameserver 127.0.0.1"
-    state: present
-  when: inventory_hostname in groups['consul']
+    insertbefore: BOF
+    block: |
+      {%- for dns in dns_servers -%}
+      nameserver {{ dns }}
+      {% endfor %}
+    state: "{{ dns_state | default('absent') }}"
 
-- name: Ensure consul DNS entry exists on resolv.conf
-  become: true
-  lineinfile:
-    path: /etc/resolv.conf
-    regex: "^nameserver {{ item }}"
-    line: "nameserver {{ item }}"
-    state: present
-  with_items: "{{ groups['consul'] | map('extract', hostvars, 'ansible_host') | reject('match', ansible_host) | list }}"
+  #template:
+  #  src: resolv.conf.j2
+  #  dest: /etc/resolv.conf 

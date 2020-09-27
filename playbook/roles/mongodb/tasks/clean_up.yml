@@ -1,0 +1,11 @@
+---
+- name: Remove service Mongodb
+  import_role:
+    name: common
+    tasks_from: service_cleanup
+  vars:
+    compose_file: "{{ datastore.mongodb.compose_dir }}/{{ datastore.mongodb.compose_file }}"
+    remove_files_and_folders:
+      - "{{ datastore.mongodb.compose_dir }}/{{ datastore.mongodb.compose_file }}"
+      - "{{ datastore.mongodb.data_dir }}"
+      - "{{ datastore.mongodb.config_dir }}"

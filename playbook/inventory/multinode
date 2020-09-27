@@ -6,9 +6,26 @@ node-3 ansible_host=192.168.100.13 ansible_user=vagrant ansible_password=vagrant
 [consul]
 node-1
 node-2
-node-3 is_consul_server=True
+node-3
 
 [mongodb]
 node-1
 node-2 is_mongodb_master=True
 node-3
+
+[api_1]
+node-1
+
+[api_2]
+node-2
+
+[api_gateway]
+node-3
+
+[apis:children]
+api_1
+api_2
+
+[api:children]
+api_gateway
+apis

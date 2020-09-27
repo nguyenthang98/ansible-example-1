@@ -1,7 +1,21 @@
 ---
-- name: Register service with consul
+#- debug:
+#    msg: "{{ service_name | default(service_config.discovery_name) }}"
+#
+#- debug:
+#    var: ansible_facts
+#  delegate_to: "{{ item }}"
+#  with_items: "{{ groups['consul'] }}"
+
+- name: Register a service with consul
   template:
     src: consul-service.json.j2
-    dest: "{{ consul.config_dir }}/{{ service_id }}.json"
+    dest: "{{ consul.config_dir }}/{{ service_name | default(service_config.discovery_name) }}.json"
     mode: "0755"
-  notify: reload consul config
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['consul'] }}"
+
+- name: Reload Consul service
+  shell: docker-compose -f {{ consul.compose_dir }}/docker-compose.yml exec consul consul reload
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['consul'] }}"

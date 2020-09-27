@@ -1,0 +1,7 @@
+---
+- include_tasks: bootstrap_gateway.yml
+  when: inventory_hostname in groups['api_gateway']
+
+- include_tasks: bootstrap_apis.yml
+  when: inventory_hostname in groups['apis']
+

@@ -1,5 +1,5 @@
 ---
-- name: Bootstrap consul service
+- name: Cleanup Consul service
   hosts: consul
   gather_facts: false
   roles:
@@ -14,11 +14,5 @@
         tasks_from: config_dns
       vars:
         dns_servers: "{{ ['127.0.0.1'] + groups['consul'] | map('extract', hostvars, 'ansible_host') | list }}"
-        dns_state: present
-
 
 - import_playbook: datastore.yml
-
-- import_playbook: api.yml
-  tags:
-    - dev

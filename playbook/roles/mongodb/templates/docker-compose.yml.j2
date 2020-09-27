@@ -1,4 +1,4 @@
-version: "{{ docker.compose_version }}"
+version: "{{ datastore.mongodb.compose_file_version | default(docker.compose_file_version) }}"
 
 services:
   mongodb:

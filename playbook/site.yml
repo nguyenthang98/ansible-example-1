@@ -1,4 +1,10 @@
 ---
 - import_playbook: gather_facts.yml
-- import_playbook: bootstrap.yml
+  when:
+    - play_action != "clean_up"
+
+- import_playbook: "bootstrap.yml"
   when: play_action == 'bootstrap'
+
+- import_playbook: "clean_up.yml"
+  when: play_action == 'clean_up'

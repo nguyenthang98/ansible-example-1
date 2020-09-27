@@ -1,0 +1,44 @@
+- name: Prepare gateway
+  include_role:
+    name: common
+    tasks_from: service_prepare
+  vars:
+    service_config: "{{ api.gateway }}"
+
+- name: Create gateway files from template
+  become: true
+  template:
+    src: gateway.compose.yml.j2
+    dest: "{{ api.gateway.compose_dir }}/gateway.compose.yml"
+    owner: vagrant
+    group: sudo
+    mode: "0755"
+
+- name: Deploy API Gateway
+  import_role:
+    name: common
+    tasks_from: service_up
+  vars:
+    service_compose_file: "{{ api.gateway.compose_dir }}/gateway.compose.yml"
+
+- name: Register gateway with consul
+  run_once: true
+  import_role:
+    name: common
+    tasks_from: service_register
+    handlers_from: main
+  vars:
+    service_config: "{{ api.gateway }}"
+    service_endpoints: "{{ groups['api_gateway'] | map('extract', hostvars, 'ansible_host') | list }}"
+    service_name: "{{ api.gateway.discovery_name }}"
+
+- name: Register services
+  block:
+    - name: Create config files
+      template:
+        src: "{{ item }}.nginx.conf.j2"
+        dest: "{{ api.gateway.config_dir }}/{{ item }}.conf"
+      with_items: "{{ api.services | dict2items | map(attribute='key') | list }}"
+    - name: Reload nginx
+      shell: >
+        docker-compose -f {{ api.gateway.compose_dir }}/gateway.compose.yml exec -T api_gateway nginx -s reload

@@ -1,0 +1,45 @@
+- name: Prepare apis
+  include_role:
+    name: common
+    tasks_from: service_prepare
+  vars:
+    service_config: "{{ api.services[item] }}"
+  when: inventory_hostname in groups[item]
+  with_items: "{{ api.services | dict2items | map(attribute='key') | list }}"
+
+- name: Create files from templates
+  become: true
+  template:
+    src: "{{ item }}.compose.yml.j2"
+    dest: "{{ api.services[item].compose_dir }}/{{ item }}.compose.yml"
+    owner: vagrant
+    group: sudo
+    mode: "0755"
+  when: inventory_hostname in groups[item]
+  with_items: "{{ api.services | dict2items | map(attribute='key') | list }}"
+
+- name: Deploy API Gateway
+  include_role:
+    name: common
+    tasks_from: service_up
+  vars:
+    service_compose_file: "{{ api.services[item].compose_dir }}/{{ item }}.compose.yml"
+  when: inventory_hostname in groups[item]
+  with_items: "{{ api.services | dict2items | map(attribute='key') | list }}"
+
+- name: Register gateway with consul
+  run_once: true
+  include_role:
+    name: common
+    tasks_from: service_register
+    handlers_from: main
+  vars:
+    service_config: "{{ api.services[loop_item] }}"
+    service_endpoints: "{{ groups[loop_item] | map('extract', hostvars, 'ansible_host') | list }}"
+    service_name: "{{ api.services[loop_item].discovery_name }}"
+    service_port: "{{ api.services[loop_item].port }}"
+    service_checks:
+      - type: port_check
+  loop_control:
+    loop_var: loop_item
+  loop: "{{ api.services | dict2items | map(attribute='key') | list }}"

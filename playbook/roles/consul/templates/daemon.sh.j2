@@ -1,0 +1,35 @@
+#!/bin/bash
+
+
+MY_IP=$1
+CONSUL_CONF_DIR={{ consul.config_dir }}
+
+while true
+do 
+  echo "===================== CHECKING ======================"
+  CONSUL_MASTER=$(curl -s http://localhost:8500/v1/status/leader | awk -F":" '{gsub(/"/, "");print $1}')
+  if [ "$MY_IP" = "$CONSUL_MASTER" ]; then
+    echo "[$(date)] current node is master. Ensure all config file are enabled".
+    WAIT_FILES_LENGTH=$(find $CONSUL_CONF_DIR -name "*.json.wait" -type f | wc -l)
+    if [[ $WAIT_FILES_LENGTH -gt 0 ]]; then
+      echo "[$(date)] detect $WAIT_FILES_LENGTH wait files in consul config folder move them to config files"
+      for file in $(find $CONSUL_CONF_DIR -name "*.json.wait" -type f); do
+        mv "$file" "${file%.wait}"
+      done
+      /usr/local/bin/docker-compose -f {{ consul.compose_dir }}/{{ consul.compose_file }} exec -T consul consul reload
+    fi
+  else
+    echo "[$(date)] current node is not master node. Ensure all config file are disabled".
+    CONFIG_FILES_LENGTH=$(find $CONSUL_CONF_DIR -name "*.json" -type f | wc -l)
+    if [[ $CONFIG_FILES_LENGTH -gt 0 ]]; then
+      echo "[$(date)] detect $CONFIG_FILES_LENGTH config files in consul config folder move them to wait files"
+
+      for file in $(find $CONSUL_CONF_DIR -name "*.json" -type f ); do
+        mv "$file" "$file.wait"
+      done
+
+      /usr/local/bin/docker-compose -f {{ consul.compose_dir }}/{{ consul.compose_file }} exec -T consul consul reload
+    fi
+  fi
+  sleep 10
+done

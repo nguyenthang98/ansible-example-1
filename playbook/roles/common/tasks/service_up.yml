@@ -1,6 +1,8 @@
 ---
 - name: Bring service up
   shell: docker-compose -f {{ service_compose_file }} up -d
+  register: service_up_returned
+  changed_when: "'Recreating' in service_up_returned.stdout"
 
 - name: Ensure all ports of service are listerning
   wait_for:
@@ -15,7 +17,9 @@
     - name: List services
       shell: docker-compose -f {{ service_compose_file }} ps --services | wc -l
       register: services_length
+      changed_when: false
     - name: List Up state services and ensure these services length are equal to orginal
       shell: docker-compose -f {{ service_compose_file }} ps | grep Up | wc -l
       register: services_up
+      changed_when: false
       failed_when: services_up.stdout|int != services_length.stdout|int

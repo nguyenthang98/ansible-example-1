@@ -1,0 +1,11 @@
+
+version: "{{ docker.compose_file_version }}"
+
+services:
+  api_gateway:
+    image: {{ api.gateway.image }} 
+    network_mode: host
+    restart: always
+    volumes:
+      - {{ api.gateway.config_dir }}:/etc/nginx/conf.d
+      - {{ api.gateway.log_dir }}:/var/log/nginx

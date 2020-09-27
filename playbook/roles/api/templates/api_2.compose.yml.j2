@@ -1,0 +1,12 @@
+
+version: "{{ docker.compose_file_version }}"
+
+services:
+  api_2:
+    image: {{ api.services.api_2.image }} 
+    restart: always
+    volumes:
+      #- {{ api.services.api_2.config_dir }}:/etc/nginx/conf.d
+      - {{ api.services.api_2.log_dir }}:/var/log/nginx
+    ports:
+      - {{ api.services.api_2.port }}:80

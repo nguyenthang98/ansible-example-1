@@ -4,22 +4,58 @@ play_action: 'bootstrap'
 
 # Docker and Docker-composed
 docker:
-  compose_version: "2.1"
+  compose_file_version: "2.1"
 
 # HashiCorp Consul
 consul:
   compose_dir: /opt/consul
   data_dir: /opt/consul/data
   config_dir: /opt/consul/consul.d
-  image: consul:1.8
-  service_discovery_domain: service.consul
+  #image: consul:1.8
+  image: bitnami/consul:1.8.4
+  domain: cs
+  compose_file: docker-compose.yml
+  recursors:
+    - 8.8.8.8
 
 datastore:
   # Mongodb
   mongodb:
     discovery_name: mongodb
     compose_dir: /opt/datastore/services
+    compose_file: mongodb.compose.yml
     data_dir: /opt/datastore/data/mongodb
     config_dir: /opt/datastore/etc/mongodb
     image: mongo:bionic
     port: 27017
+
+keepalived:
+  image: osixia/keepalived:2.0.20
+  config_dir: /opt/keepalived
+
+api:
+  gateway:
+    image: nginx:1.19.2
+    discovery_name: api_gateway
+    compose_dir: /opt/api/services
+    compose_file: api_gateway.compose.yml
+    config_dir: /opt/api/etc/api_gateway
+    log_dir: /opt/api/log/api_gateway
+
+  services:
+    api_1 :
+      discovery_name: example_api_1
+      image: nginx:1.19.2
+      compose_dir: /opt/api/services
+      config_dir: /opt/api/etc/example_api_1
+      log_dir: /opt/api/log/example_api_1
+      port: 19191
+      gateway_port: 9191
+    api_2:
+      discovery_name: example_api_2
+      image: nginx:1.19.2
+      compose_dir: /opt/api/services
+      config_dir: /opt/api/etc/example_api_2
+      log_dir: /opt/api/log/example_api_2
+      port: 19192
+      gateway_port: 9192

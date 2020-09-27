@@ -1,0 +1,42 @@
+---
+- name: Bring service down
+  import_role:
+    name: common
+    tasks_from: service_cleanup
+  vars:
+    compose_file: "{{ consul.compose_dir }}/{{ consul.compose_file }}"
+    remove_files_and_folders:
+      - "{{ consul.compose_dir }}"
+
+- name: Forward DNS traffic to consul using iptables (PREROUTING)
+  become: yes
+  iptables:
+    table: nat
+    chain: PREROUTING
+    protocol: "{{ item }}"
+    match: "{{ item }}"
+    destination_port: 53
+    jump: REDIRECT
+    to_ports: 8600
+    comment: CONSUL - Redirect DNS traffic to port 8600
+    state: absent
+  with_items:
+    - tcp
+    - udp
+
+- name: Forward DNS traffic to consul using iptables (OUTPUT)
+  become: yes
+  iptables:
+    table: nat
+    chain: OUTPUT
+    protocol: "{{ item }}"
+    match: "{{ item }}"
+    destination: localhost
+    destination_port: 53
+    jump: REDIRECT
+    to_ports: 8600
+    comment: CONSUL - Redirect DNS traffic to port 8600
+    state: absent
+  with_items:
+    - tcp
+    - udp

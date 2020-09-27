@@ -15,7 +15,7 @@
     group: sudo
     mode: "0755"
   with_items:
-    - {src: "docker-compose.yml.j2", dest: "{{ datastore.mongodb.compose_dir }}/mongo.compose.yml"}
+    - {src: "docker-compose.yml.j2", dest: "{{ datastore.mongodb.compose_dir }}/{{ datastore.mongodb.compose_file }}"}
     - {src: "init_repl.js.j2", dest: "{{ datastore.mongodb.config_dir }}/init_repl.js"}
 
 - name: Deploy mongodb
@@ -23,7 +23,7 @@
     name: common
     tasks_from: service_up
   vars:
-    service_compose_file: "{{ datastore.mongodb.compose_dir }}/mongo.compose.yml"
+    service_compose_file: "{{ datastore.mongodb.compose_dir }}/{{ datastore.mongodb.compose_file }}"
     service_ports:
       - "{{ datastore.mongodb.port }}"
 
@@ -33,18 +33,39 @@
     - hostvars[inventory_hostname]['is_mongodb_master'] is defined
     - hostvars[inventory_hostname]['is_mongodb_master'] | bool
 
-- name: Register service with consul (cluster)
-  import_role:
-    name: common
-    tasks_from: service_register
-    handlers_from: main
-  vars:
-    service_name: mongodb_cluster
-    service_port: "{{ datastore.mongodb.port }}"
-    service_address: "{{ ansible_host }}"
-    service_id: mongodb_cluster
-    service_checks:
-      - id: mongodb_port_open
-        name: Check Mongodb Port
-        tcp_check: "{{ ansible_host }}:{{ datastore.mongodb.port }}"
-  when: groups['mongodb'] | length >= 3
+#- name: Register service with consul
+#  run_once: true
+#  import_role:
+#    name: common
+#    tasks_from: service_register
+#    handlers_from: main
+#  vars:
+#    service_config: "{{ datastore.mongodb }}"
+#    service_endpoints: "{{ groups['mongodb'] | map('extract', hostvars, 'ansible_host') | list }}"
+#    service_name: "{{ datastore.mongodb.discovery_name }}"
+#    service_checks:
+#      - type: port_check
+
+- name: Register master service with consul
+  run_once: true
+  block:
+    - name: Create script check file to consul
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['consul'] }}"
+      template:
+        src: master_check.sh.j2
+        dest: "{{ consul.config_dir }}/mongodb.master_check.sh"
+        mode: "0755"
+
+    - import_role:
+        name: common
+        tasks_from: service_register
+        handlers_from: main
+      vars:
+        service_config: "{{ datastore.mongodb }}"
+        service_endpoints: "{{ groups['mongodb'] | map('extract', hostvars, 'ansible_host') | list }}"
+        service_name: mongodb_master
+        service_checks:
+          - type: port_check
+          - type: script_check
+            script_file: "mongodb.master_check.sh"

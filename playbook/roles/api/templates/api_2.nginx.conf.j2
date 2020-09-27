@@ -1,0 +1,6 @@
+server {
+  listen {{ api.services.api_2.gateway_port }};
+  location / {
+    proxy_pass http://{{ api.services.api_2.discovery_name }}.service.{{ consul.domain }}:{{ api.services.api_2.port }};
+  }
+}

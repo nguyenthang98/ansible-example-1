@@ -1,41 +1,50 @@
 {
-    "service": {
-        "id": "{{ service_id }}",
-        "name": "{{ service_name }}",
-        "port": {{ service_port }},
-        "address": "{{ service_address }}",
-        "tags": [
-					{{ service_tags | default([]) | join(",")}}
-        ],
-        "checks":[
-				{%- for check in service_checks -%}
-				{
-            "id": "{{ check.id }}",
-            "name": "{{ check.name }}",
+    "services": [
+    {%- for endpoint in service_endpoints -%}
+    {%- set endpoint_loop = loop -%}
+    {
+      "id": "{{ service_name | default(service_config.discovery_name) }}_{{ loop.index }}",
+      "name": "{{ service_name | default(service_config.discovery_name) }}",
+      {%- if service_config.port is defined -%}
+      "port": {{ service_config.port }},
+      {%- endif -%}
+      "address": "{{ endpoint }}",
+      "checks": [
+        {%- for check in service_checks | default([]) -%}
+          {%- set check_loop = loop -%}
+          {%- if check.type == "port_check" and check.check_ports is defined -%}
+            {%- for check_port in check.check_ports -%}
+          {
+            "id": "{{ item }}_{{ service_name | default(service_config.discovery_name) }}_{{ check.type }}_{{ endpoint_loop.index}}_{{check_loop.index}}_{{ loop.index }}",
+            "name": "{{ service_name | default(service_config.discovery_name) }}_{{ check.type }}",
             "interval": "{{ check.interval | default('10s')}}",
             "timeout": "{{ check.timeout | default('20s')}}",
-
-						{%- if check.script_path is defined -%}
-            "args": [
-							"{{ check.script_path }}"
-							{%- if check.script_args is defined -%}
-							, {{ check.script_args | join(",") }}
-							{%- endif -%}
-						]
-
-						{%- elif check.tcp_check is defined -%}
-						"tcp": "{{ check.tcp_check }}"
-
-						{%- elif check.http_check is defined -%}
-						"http": "{{ check.http_check }}",
-						"tls_skip_verify": false
-						{%- if check.http_method is defined -%}
-						, "method": {{ check.http_method }}
-						{%- endif -%}
-						{%- endif -%}
-        }
+            "tcp": "{{ endpoint }}:{{ check_port }}"
+          }
+            {%- if not loop.last -%},{%- endif -%}
+            {%- endfor -%}
+          {%- elif check.type == "port_check" -%}
+          {
+            "id": "{{ item }}_{{ service_name | default(service_config.discovery_name) }}_{{ check.type }}_{{ endpoint_loop.index}}_{{ check_loop.index }}",
+            "name": "{{ service_name | default(service_config.discovery_name) }}_{{ check.type }}",
+            "interval": "{{ check.interval | default('10s')}}",
+            "timeout": "{{ check.timeout | default('20s')}}",
+            "tcp": "{{ endpoint }}:{{ service_config.port }}"
+          }
+          {%- elif check.type == "script_check" -%}
+          {
+            "id": "{{ item }}_{{ service_name | default(service_config.discovery_name) }}_{{ check.type }}_{{ endpoint_loop.index}}_{{ check_loop.index }}",
+            "name": "{{ service_name | default(service_config.discovery_name) }}_{{ check.type }}",
+            "interval": "{{ check.interval | default('10s')}}",
+            "timeout": "{{ check.timeout | default('20s')}}",
+            "args": [ "sh", "-c", "/consul/consul.d/{{ check.script_file }} {{ endpoint }}" ]
+          }
+          {%- endif -%}
         {%- if not loop.last -%},{%- endif -%}
-				{%- endfor -%}
-				]
+        {%- endfor -%}
+      ]
     }
+    {%- if not loop.last -%},{%- endif -%}
+    {%- endfor -%}
+    ]
 }
