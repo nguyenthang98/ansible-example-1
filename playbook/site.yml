@@ -1,4 +1,17 @@
 ---
-- import_playbook: gather_facts.yml
-- import_playbook: bootstrap.yml
-  when: play_action == 'bootstrap'
+- hosts: nodes
+  gather_facts: false
+  become: true
+  roles:
+    - mongodb
+  tags:
+    - mongodb
+
+- name: Apply role keepalived
+  hosts: keepalived
+  gather_facts: false
+  become: true
+  roles:
+    - keepalived
+  tags:
+    - keepalived

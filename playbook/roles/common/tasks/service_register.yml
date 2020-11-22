@@ -1,7 +1,0 @@
----
-- name: Register service with consul
-  template:
-    src: consul-service.json.j2
-    dest: "{{ consul.config_dir }}/{{ service_id }}.json"
-    mode: "0755"
-  notify: reload consul config

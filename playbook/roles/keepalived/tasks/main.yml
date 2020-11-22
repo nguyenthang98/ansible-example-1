@@ -1,0 +1,21 @@
+---
+- file:
+    path: "{{ keepalived.install_path }}"
+    state: directory
+
+- template:
+    src: "{{ item }}.j2"
+    dest: "{{ keepalived.install_path }}/{{ item }}"
+  with_items:
+    - docker-compose.yml
+    - keepalived.conf
+
+- template:
+    src: "chck_script.sh.j2"
+    dest: "{{ keepalived.install_path }}/chck_script_{{ item.name }}.sh"
+    mode: "0755"
+  with_items: "{{ keepalived.routers }}"
+
+- shell:
+    cmd: docker-compose up -d --force-recreate
+    chdir: "{{ keepalived.install_path }}"

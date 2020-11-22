@@ -1,25 +1,12 @@
----
-# default play action
-play_action: 'bootstrap'
+mongodb:
+  install_path: /opt/install/mongodb
 
-# Docker and Docker-composed
-docker:
-  compose_version: "2.1"
-
-# HashiCorp Consul
-consul:
-  compose_dir: /opt/consul
-  data_dir: /opt/consul/data
-  config_dir: /opt/consul/consul.d
-  image: consul:1.8
-  service_discovery_domain: service.consul
-
-datastore:
-  # Mongodb
-  mongodb:
-    discovery_name: mongodb
-    compose_dir: /opt/datastore/services
-    data_dir: /opt/datastore/data/mongodb
-    config_dir: /opt/datastore/etc/mongodb
-    image: mongo:bionic
-    port: 27017
+keepalived:
+  install_path: /opt/install/keepalived
+  routers:
+    - name: mongodb
+      virtual_ip: 192.168.100.100/24
+      interface: enp0s8
+      checks:
+        - name: mongodb
+          port: 27017

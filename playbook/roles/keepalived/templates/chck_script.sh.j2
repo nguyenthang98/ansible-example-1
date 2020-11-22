@@ -1,0 +1,10 @@
+#!/bin/sh
+{% for check in item.checks %}
+/usr/bin/nc -zv 127.0.0.1 {{ check.port }}
+if [ $? -gt 0 ];
+then
+  exit 1;
+fi
+{% endfor %}
+
+exit 0

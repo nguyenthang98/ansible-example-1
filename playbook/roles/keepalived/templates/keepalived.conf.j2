@@ -1,0 +1,33 @@
+{% for router in keepalived.routers %}
+vrrp_script chk_{{ router.name }} {
+  script "/bin/sh /container/service/keepalived/assets/chck_script_{{ router.name }}.sh"
+  interval 2
+  weight 5
+}
+vrrp_instance VI_{{ router.name }} {
+  virtual_router_id {{ 50 + loop.index }}
+  advert_int 1
+  priority {{  hostvars[inventory_hostname].keepalived_priority | default(97) }}
+  state {{ hostvars[inventory_hostname].keepalived_state | default('BACKUP') }}
+  interface {{ hostvars[inventory_hostname].keepalived_interface | default(router.interface) }}
+  virtual_ipaddress {
+    {{ router.virtual_ip }} dev {{ hostvars[inventory_hostname].keepalived_interface | default(router.interface) }} 
+  }
+  unicast_peer {
+
+    {% for host in groups['keepalived'] -%}
+    {%- if host != inventory_hostname -%}
+    {{ hostvars[host].ansible_host }}
+    {% endif -%}
+    {%- endfor %}
+
+  }
+  authentication {
+     auth_type PASS
+     auth_pass 123456
+  }
+  track_script {
+    chk_{{ router.name }}
+  }
+}
+{% endfor %}

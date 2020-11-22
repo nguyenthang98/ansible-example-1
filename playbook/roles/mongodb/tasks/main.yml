@@ -1,2 +1,12 @@
 ---
-- include_tasks: "{{ play_action }}.yml"
+- file:
+    path: "{{ mongodb.install_path }}"
+    state: directory
+
+- template:
+    src: docker-compose.yml.j2
+    dest: "{{ mongodb.install_path }}/docker-compose.yml"
+
+- shell:
+    cmd: docker-compose up -d --force-recreate
+    chdir: "{{ mongodb.install_path }}"

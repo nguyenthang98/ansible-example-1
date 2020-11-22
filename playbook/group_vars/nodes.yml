@@ -1,0 +1,6 @@
+---
+ansible_user: vagrant
+ansible_password: vagrant
+ansible_become_user: root
+ansible_become_password: 098poiA#
+ansible_become_method: sudo
